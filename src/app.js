@@ -25,5 +25,6 @@ app.use('/api/v1', routes);
 
 app.use(notFound);
 app.use(errorHandler);
+app.use('/api/v1/customer', require('./modules/tracking/tracking.routes'));
 
 module.exports = app;
