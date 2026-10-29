@@ -24,4 +24,11 @@ router.patch('/:id/read', asyncHandler(async (req, res) => {
   ok(res, await notificationRepo.update(n.id, { read: true }));
 }));
 
+router.delete('/:id', asyncHandler(async (req, res) => {
+  const n = await notificationRepo.getById(req.params.id);
+  if (!n || n.userId !== req.user.id) throw new ApiError(404, 'Notification not found');
+  await notificationRepo.delete(n.id);
+  ok(res, null, 'Notification deleted');
+}));
+
 module.exports = router;

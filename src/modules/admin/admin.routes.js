@@ -29,6 +29,11 @@ router.get('/users/:id', c.getUser);
 router.put('/users/:id', validate(v.updateUser), c.updateUser);
 router.patch('/users/:id/status', validate(v.setStatus), c.setUserStatus);
 router.delete('/users/:id', c.deleteUser);
+router.patch('/users/:id/password', validate(v.resetPassword), c.resetUserPassword);
+
+// Notifications (admin -> users). Admin's own inbox uses GET /notifications.
+router.post('/notifications/send', validate(v.sendNotification), c.sendNotification);
+router.get('/notifications/sent', validate(v.listSent, 'query'), c.listSentNotifications);
 
 // Orders
 router.get('/orders', validate(v.listOrders, 'query'), c.listOrders);
@@ -36,6 +41,8 @@ router.get('/orders/:id', c.getOrder);
 router.patch('/orders/:id/accept', validate(v.acceptOrder), c.acceptOrder);
 router.patch('/orders/:id/reject', validate(v.rejectOrder), c.rejectOrder);
 router.patch('/orders/:id/assign', validate(v.assignDelivery), c.assignDelivery);
+router.patch('/orders/:id/cancel', validate(v.cancelOrder), c.cancelOrder);
+router.get('/delivery-boys', validate(v.listDeliveryBoys, 'query'), c.listDeliveryBoys);
 router.get('/delivery-boys/available', validate(v.availableBoys, 'query'), c.availableDeliveryBoys);
 
 // Settings (delivery charge - admin only)

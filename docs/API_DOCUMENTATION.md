@@ -79,7 +79,7 @@ Mavshi register body:
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| GET | `/admin/dashboard` | Counts: customers, mavshis, pending requests, orders |
+| GET | `/admin/dashboard` | Counts (customers, mavshis, delivery boys, pending requests, orders), `ordersToday`, `revenue`, `revenueToday`, `blockedUsers`, `recentOrders` |
 | GET | `/admin/mavshis?status=PENDING&pincode=&page=&limit=` | Review mavshi requests |
 | GET | `/admin/mavshis/:id` | Mavshi details + menu/pricing |
 | PATCH | `/admin/mavshis/:id/approve` `{planId?}` | Accept. If `planId` is given the plan is assigned directly; if the plan is missing/inactive the request is **not** approved (400) so admin can pick another plan or reject. Mavshi gets notification. |
@@ -90,14 +90,21 @@ Mavshi register body:
 | GET | `/admin/users?role=&status=&pincode=&search=` | Manage all roles |
 | POST | `/admin/users` | Create any user incl. another admin |
 | GET/PUT/DELETE | `/admin/users/:id` | View / edit / delete |
-| PATCH | `/admin/users/:id/status` `{status: ACTIVE|BLOCKED, reason}` | Block / unblock (takes effect immediately) |
-| GET | `/admin/orders?status=&pincode=` | All orders |
+| PATCH | `/admin/users/:id/status` `{status: ACTIVE|BLOCKED, reason}` | Block / unblock (takes effect immediately). Unblock restores the earlier status (a PENDING mavshi stays PENDING). User is notified when blocked. |
+| PATCH | `/admin/users/:id/password` `{newPassword}` | Reset any user's password (user is notified) |
+| GET | `/admin/orders?status=&pincode=&paymentStatus=&paymentMethod=&mavshiId=&deliveryBoyId=&search=&from=YYYY-MM-DD&to=YYYY-MM-DD&page=&limit=` | All orders. `search` matches order no., customer name/mobile, mess name |
 | GET | `/admin/orders/:id` | Order detail |
 | PATCH | `/admin/orders/:id/accept` `{deliveryBoyId?}` | Accept order, set ETA (25 min), notify customer + mavshi |
 | PATCH | `/admin/orders/:id/reject` `{reason}` | Reject with reason. Paid online orders are **auto refunded** via Razorpay first; if refund fails the order stays `PLACED` for retry. |
 | PATCH | `/admin/orders/:id/assign` `{deliveryBoyId}` | Assign delivery boy (must be active, available, same pincode) |
+| PATCH | `/admin/orders/:id/cancel` `{reason}` | Cancel an ACCEPTED / PREPARING / READY order. Online payments are refunded first; customer, mess and delivery boy are notified |
+| GET | `/admin/delivery-boys?pincode=&available=&status=&page=&limit=` | All delivery boys with `isAvailable` and live `activeOrders` count |
 | GET | `/admin/delivery-boys/available?pincode=` | Pick a delivery boy |
+| POST | `/admin/notifications/send` `{target: USER\|ROLE\|ALL, userId?, role?, title, body}` | Send an in-app + push announcement. Returns recipient count |
+| GET | `/admin/notifications/sent?page=&limit=` | History of announcements sent by admins |
 | GET/PUT | `/admin/settings` | **Delivery charge** (admin only), base delivery minutes, traffic extra minutes |
+
+**Admin inbox:** admins receive notifications (list via `GET /notifications`, mark read, `DELETE /notifications/:id`) for: new mavshi request, mavshi re-submission, new customer, new delivery partner, new order (COD and paid online), order cancelled by customer, and order delivered.
 
 ---
 

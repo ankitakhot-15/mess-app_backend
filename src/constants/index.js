@@ -22,6 +22,8 @@ module.exports = {
     MAVSHI_REJECTED: 'MAVSHI_REJECTED',
     ORDER: 'ORDER',
     DELIVERY: 'DELIVERY',
+    ANNOUNCEMENT: 'ANNOUNCEMENT',
+    USER: 'USER',
     GENERAL: 'GENERAL',
   },
 };

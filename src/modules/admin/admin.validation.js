@@ -31,7 +31,6 @@ exports.plan = Joi.object({
   durationDays: Joi.number().integer().min(1).max(3650).required(), fee: Joi.number().min(0).required(), active: Joi.boolean().default(true),
 });
 exports.planUpdate = exports.plan.fork(['name', 'durationDays', 'fee'], (s) => s.optional()).min(1);
-exports.listOrders = Joi.object({ status: Joi.string().valid(...Object.values(ORDER_STATUS)), pincode, ...pagination });
 exports.acceptOrder = Joi.object({ deliveryBoyId: Joi.string() });
 exports.rejectOrder = Joi.object({ reason: Joi.string().trim().min(5).max(300).required() });
 exports.assignDelivery = Joi.object({ deliveryBoyId: Joi.string().required() });
@@ -43,3 +42,25 @@ exports.settings = Joi.object({
     NORMAL: Joi.number().integer().min(0).max(120), MODERATE: Joi.number().integer().min(0).max(120), HEAVY: Joi.number().integer().min(0).max(240),
   }),
 }).min(1);
+
+// ---- added: notifications, order filters, password reset, admin cancel ----
+exports.listOrders = Joi.object({
+  status: Joi.string().valid(...Object.values(ORDER_STATUS)), pincode,
+  paymentStatus: Joi.string().valid('PENDING', 'PAID', 'FAILED', 'REFUNDED'),
+  paymentMethod: Joi.string().valid('ONLINE', 'COD'),
+  mavshiId: Joi.string(), deliveryBoyId: Joi.string(),
+  search: Joi.string().trim().max(50),
+  from: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/), to: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/),
+  ...pagination,
+});
+exports.cancelOrder = Joi.object({ reason: Joi.string().trim().min(5).max(300).required() });
+exports.resetPassword = Joi.object({ newPassword: password.required() });
+exports.listDeliveryBoys = Joi.object({ pincode, available: Joi.boolean(), status: Joi.string().valid(...Object.values(USER_STATUS)), ...pagination });
+exports.sendNotification = Joi.object({
+  target: Joi.string().valid('USER', 'ROLE', 'ALL').required(),
+  userId: Joi.when('target', { is: 'USER', then: Joi.string().required(), otherwise: Joi.forbidden() }),
+  role: Joi.when('target', { is: 'ROLE', then: Joi.string().valid(...Object.values(ROLES)).required(), otherwise: Joi.forbidden() }),
+  title: Joi.string().trim().min(2).max(80).required(),
+  body: Joi.string().trim().min(2).max(300).required(),
+});
+exports.listSent = Joi.object({ ...pagination });

@@ -39,4 +39,19 @@ async function notifyRole(role, payload) {
 
 const notifyAdmins = (payload) => notifyRole(ROLES.ADMIN, payload);
 
-module.exports = { notify, notifyRole, notifyAdmins };
+/** Admin broadcast: one user, one role, or everyone (blocked users skipped). Returns number of users reached. */
+async function broadcast({ userId, role, title, body, data = {} }) {
+  let targets;
+  if (userId) {
+    const u = await userRepo.getById(userId);
+    targets = u ? [u] : [];
+  } else {
+    const filters = role ? { role } : {};
+    targets = (await userRepo.find(filters, { limit: 1000 })).filter((u) => u.status !== USER_STATUS.BLOCKED);
+  }
+  const type = NOTIFICATION_TYPE.ANNOUNCEMENT;
+  await Promise.all(targets.map((u) => notify(u.id, { title, body, type, data })));
+  return targets.length;
+}
+
+module.exports = { notify, notifyRole, notifyAdmins, broadcast };

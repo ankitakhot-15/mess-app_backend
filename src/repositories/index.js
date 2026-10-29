@@ -38,4 +38,5 @@ module.exports = {
   notificationRepo: new BaseRepository('notifications'),
   otpRepo: new BaseRepository('otps'),
   settingsRepo: new BaseRepository('settings'),
+  broadcastRepo: new BaseRepository('broadcasts'),
 };

@@ -56,6 +56,7 @@ exports.registerDelivery = async (p) => {
     currentLocation: null,
     fcmToken: null,
   });
+  await notifyAdmins({ title: 'New delivery partner', body: `${user.fullName} joined in ${user.pincode}.`, type: NOTIFICATION_TYPE.USER, data: { userId: user.id, role: ROLES.DELIVERY } });
   return session(user, 'Delivery partner registered');
 };
 
@@ -69,6 +70,7 @@ exports.registerCustomer = async (p) => {
     location: p.location || null,
     fcmToken: null,
   });
+  await notifyAdmins({ title: 'New customer', body: `${user.fullName} (${user.pincode || 'no pincode'}) registered.`, type: NOTIFICATION_TYPE.USER, data: { userId: user.id, role: ROLES.CUSTOMER } });
   return session(user, 'Customer registered');
 };
 

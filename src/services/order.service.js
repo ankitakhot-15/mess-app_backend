@@ -168,6 +168,18 @@ exports.adminReject = async (admin, id, reason) => {
   return updated;
 };
 
+exports.adminCancel = async (admin, id, reason) => {
+  const order = await getOrder(id);
+  expectStatus(order, [S.ACCEPTED, S.PREPARING, S.READY], 'cancel');
+  const payment = await refundIfPaid(order, reason); // refund first; on failure the order is left untouched
+  const updated = await setStatus(order, S.CANCELLED, { payment, cancelReason: reason, cancelledBy: admin.id }, reason);
+  const refunded = payment.status === PS.REFUNDED;
+  await notify(order.customerId, { title: 'Order cancelled', body: `Reason: ${reason}.${refunded ? ' Your payment has been refunded (takes 5-7 working days to reflect).' : ''}`, type: NT.ORDER, data: { orderId: id, status: S.CANCELLED } });
+  await notify(order.mavshiId, { title: 'Order cancelled', body: `${order.orderNumber}: ${reason}`, type: NT.ORDER, data: { orderId: id } });
+  if (order.deliveryBoyId) await notify(order.deliveryBoyId, { title: 'Delivery cancelled', body: order.orderNumber, type: NT.DELIVERY, data: { orderId: id } });
+  return updated;
+};
+
 exports.assignDelivery = async (id, deliveryBoyId) => {
   const order = await getOrder(id);
   expectStatus(order, [S.ACCEPTED, S.PREPARING, S.READY], 'assign delivery for');
@@ -220,6 +232,7 @@ exports.deliver = async (boy, id) => {
   const updated = await setStatus(order, S.DELIVERED, { payment, deliveredAt: now() });
   await notify(order.customerId, { title: 'Delivered', body: `Order ${order.orderNumber} delivered. Enjoy your meal!`, type: NT.ORDER, data: { orderId: id, status: S.DELIVERED } });
   await notify(order.mavshiId, { title: 'Order delivered', body: order.orderNumber, type: NT.ORDER, data: { orderId: id } });
+  notifyAdmins({ title: 'Order delivered', body: `${order.orderNumber} delivered by ${boy.fullName}${order.payment.method === PM.COD ? ` (COD ₹${order.pricing.total} collected)` : ''}`, type: NT.ORDER, data: { orderId: id } });
   return updated;
 };
 
